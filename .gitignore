@@ -132,6 +132,7 @@ venv.bak/
 
 .models.example
 models.example/
+models.example
 
 # Spyder project settings
 .spyderproject
