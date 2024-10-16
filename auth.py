@@ -8,10 +8,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # функции для хеширования и проверки пароля
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+def password_verificate(usual_password, hashed_password):
+    return pwd_context.verify(usual_password, hashed_password)
 
 # функция для создания токена
-def create_access_token(data: dict):
+def create_token(data: dict):
     # реализация токена
     pass
