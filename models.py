@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+
 class User(Base):
     __tablename__ = 'users'
 
@@ -11,13 +12,14 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     password = Column(String)
 
+
 class Message(Base):
     __tablename__ = 'messages'
 
-    id = Column(Integer, primary_key=True, index=True)
-    from_user_id = Column(Integer, ForeignKey('users.id'))
-    to_user_id = Column(Integer, ForeignKey('users.id'))
+    id = Column(Integer, primary_key=True, index=True)   
+    sender_id = Column(Integer, ForeignKey('users.id'))
+    recipient_id = Column(Integer, ForeignKey('users.id'))
     content = Column(String)
 
-    from_user = relationship('User', foreign_keys=[from_user_id])
-    to_user = relationship('User', foreign_keys=[to_user_id])
+    sender = relationship('User', foreign_keys=[sender_id])
+    recipient = relationship('User', foreign_keys=[recipient_id])
