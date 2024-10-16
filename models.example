@@ -1,0 +1,48 @@
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+
+# Column: Используется для создания столбцов в таблицах базы данных.
+# Integer, String: Типы данных для столбцов. Integer — это целочисленный тип, а String — строковой тип.
+# ForeignKey: Определяет внешний ключ, устанавливающий связь между таблицами.
+# relationship: Позволяет установить отношение между моделями.
+# declarative_base: Функция, которая возвращает базовый класс, на основе которого будут созданы модели
+
+Base = declarative_base()
+# создаем базовый класс Base, от которого будут наследоваться все наши модели. Этот класс содержит всю 
+# необходимую информацию для SQLAlchemy, чтобы работать с таблицами в базе данных
+
+
+class User(Base):
+    __tablename__ = 'users'
+    
+  # User: Это класс, представляющий пользователей в системе.
+  # tablename: Специальное свойство, которое указывает
+  # название таблицы в базе данных. Здесь она будет называться users
+
+    id = Column(Integer, primary_key=True, index=True)
+    # id: Уникальный идентификатор для каждого пользователя.
+    # Integer: Тип данных.
+    # primary_key=True: Указывает, что это поле является первичным ключом.
+    # index=True: Создает индекс для данного поля для ускорения операций поиска
+    
+    username = Column(String, unique=True, index=True)
+    password = Column(String)  # Храните хеш пароля
+    # Важно: пароли должны храниться в зашифрованном виде 
+    # (например, с использованием хеширования), а не в открытом виде.
+
+
+class Message(Base):
+    __tablename__ = 'messages'
+
+    id = Column(Integer, primary_key=True, index=True)
+    
+    from_user_id = Column(Integer, ForeignKey('users.id'))
+    # Внешний ключ, указывающий на пользователя, от которого отправлено сообщение.
+    # ForeignKey('users.id'): Указывает, что это поле ссылается на поле id в таблице users.  
+     
+    to_user_id = Column(Integer, ForeignKey('users.id'))
+    content = Column(String)
+
+    from_user = relationship('User', foreign_keys=[from_user_id])
+    to_user = relationship('User', foreign_keys=[to_user_id])
