@@ -12,3 +12,9 @@ async def send_message(message: Message, db: Session = Depends(get_db)):
 async def websocket_endpoint(websocket: WebSocket, user_id: int):
     # Логика для обработки WebSocket соединений
     pass
+
+
+@app.get("/messages/history/{user_id}")
+def get_history(user_id: int, db: Session = Depends(get_db)):
+    # Логика для извлечения истории сообщений
+    pass
