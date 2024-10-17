@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status
 from sqlalchemy.future import select
 from passlib.context import CryptContext
 from jose import jwt
@@ -15,7 +16,7 @@ async def register_user(username, password, db):
     exist_user = await db.execute(
         select(User).where(User.username == username)
     )
-    if exist_user:
+    if exist_user.scalars().first():
         return False
     hash_password = pwd_context.hash(password)
     await db.execute(User.__table__.insert().values(
@@ -25,16 +26,20 @@ async def register_user(username, password, db):
     return True
 
 
-async def auth_user(db, username, password):
-    user = await db.execute(select(User).where(User.username == username))
+async def login_user(db, username, password):
+    res = await db.execute(select(User).where(User.username == username))
+    user = res.scalars().first()
     if not user or not pwd_context.verify(password, user['password']):
-        return False
-    return True
-
-
-def create_token(user_data):
-    token_data = user_data.copy()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверное имя пользователя или пароль",
+        )
+    token_data = {"sub": user.username}
     expiration = datetime.now() + timedelta(minutes=TOKEN_LIFE)
     token_data.update({"exp": expiration})
-    aggregated_jwt = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
-    return aggregated_jwt
+    access_token = jwt.encode(
+        token_data,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
