@@ -29,7 +29,7 @@ async def auth_user(db, username, password):
     user = await db.execute(select(User).where(User.username == username))
     if not user or not pwd_context.verify(password, user['password']):
         return False
-    return user
+    return True
 
 
 def create_token(user_data):
