@@ -1,8 +1,10 @@
+import select
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from .auth import register_user, login_user
 from .servicedb import connect_db
+from .models import Message
 
 app = FastAPI()
 
@@ -29,12 +31,25 @@ async def login(
 
 
 @app.post("/messages/")
-async def send_message(message: Message, db: Session = Depends(connect_db)):
-    # Логика для отправки сообщения
-    pass
+async def send_message(
+    sender_id,
+    recipient_id,
+    content,
+    db: Session = Depends(connect_db)
+):
+    new_message = Message(
+        sender_id=sender_id,
+        recipient_id=recipient_id,
+        content=content
+    )
+    db.add(new_message)
+    await db.commit()
+    return {"detail": "Сообщение успешно отправлено"}
+
 
 @app.get("/messages/history/{user_id}")
-async def get_history(user_id: int, db: Session = Depends(get_db)):
-    # Логика для извлечения истории сообщений
-    pass
-
+async def get_history(user_id, db: Session = Depends(connect_db)):
+    messages = await db.execute(select(Message).where(
+        (Message.sender_id == user_id) | (Message.recipient_id == user_id)
+    ))
+    return messages.scalars().all()
