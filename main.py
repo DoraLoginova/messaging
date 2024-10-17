@@ -1,6 +1,6 @@
-import select
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.future import select
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from .auth import register_user, login_user
 from .servicedb import connect_db
@@ -53,3 +53,8 @@ async def get_history(user_id, db: Session = Depends(connect_db)):
         (Message.sender_id == user_id) | (Message.recipient_id == user_id)
     ))
     return messages.scalars().all()
+
+
+@app.get("/secure-data/")
+async def secure_data(token: str = Depends(oauth2_scheme)):
+    return {"message": "Это защищенные данные."}
