@@ -1,6 +1,6 @@
-# messaging
+# quick_messaging
 
-
+cd quick_messaging
 Cоздать и активировать виртуальное окружение:
 
 ```
