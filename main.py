@@ -5,19 +5,28 @@ from fastapi import (
     status,
     WebSocket,
     WebSocketDisconnect
-
 )
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from fastapi import Request
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from .auth import register_user, login_user
-from .models import Message
-from .pydantic_models import UserRegister, MessageCreate
-from .servicedb import connect_db
+from auth import register_user, login_user
+from models import Message
+from pydantic_models import UserRegister, MessageCreate
+from servicedb import connect_db
 
 app = FastAPI()
 
+templates = Jinja2Templates(directory="templates")
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.post("/register/")

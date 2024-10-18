@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from fastapi import HTTPException, status
 from sqlalchemy.future import select
 from passlib.context import CryptContext
@@ -6,9 +8,11 @@ from datetime import datetime, timedelta
 
 from models import User
 
-SECRET_KEY = "secret-key"
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-TOKEN_LIFE = 30
+TOKEN_LIFE = os.getenv("TOKEN_LIFE")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

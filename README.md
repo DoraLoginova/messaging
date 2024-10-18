@@ -4,11 +4,11 @@ cd quick_messaging
 Cоздать и активировать виртуальное окружение:
 
 ```
-python3 -m venv env
+python3 -m venv venv
 ```
 
 ```
-source env/bin/activate
+source venv/bin/activate
 ```
 
 Установить зависимости из файла requirements.txt:
