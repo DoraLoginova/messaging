@@ -1,28 +1,11 @@
 # quick_messaging
 
 cd quick_messaging
-Cоздать и активировать виртуальное окружение:
-
-```
-python3 -m venv venv
-```
-
-```
-source venv/bin/activate
-```
-
-Установить зависимости из файла requirements.txt:
-
-```
-python3 -m pip install --upgrade pip
-```
-
-```
-pip install -r requirements.txt
-```
 
 Запустить проект:
 
 ```
-
+docker-compose up --build
 ```
+будет доступно по адресу  http://0.0.0.0:8000 
+документация http://0.0.0.0:8000/docs
