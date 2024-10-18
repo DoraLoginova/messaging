@@ -1,10 +1,19 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import (
+    FastAPI,
+    Depends,
+    HTTPException,
+    status,
+    WebSocket,
+    WebSocketDisconnect
+
+)
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from .auth import register_user, login_user
-from .servicedb import connect_db
 from .models import Message
+from .pydantic_models import UserRegister, MessageCreate
+from .servicedb import connect_db
 
 app = FastAPI()
 
@@ -12,8 +21,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 @app.post("/register/")
-async def register(username, password, db: Session = Depends(connect_db)):
-    result = await register_user(username, password, db)
+async def register(user: UserRegister, db: Session = Depends(connect_db)):
+    result = await register_user(user.username, user.password, db)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -32,15 +41,13 @@ async def login(
 
 @app.post("/messages/")
 async def send_message(
-    sender_id,
-    recipient_id,
-    content,
+    message: MessageCreate,
     db: Session = Depends(connect_db)
 ):
     new_message = Message(
-        sender_id=sender_id,
-        recipient_id=recipient_id,
-        content=content
+        sender_id=message.sender_id,
+        recipient_id=message.recipient_id,
+        content=message.content
     )
     db.add(new_message)
     await db.commit()
@@ -58,3 +65,14 @@ async def get_history(user_id, db: Session = Depends(connect_db)):
 @app.get("/secure-data/")
 async def secure_data(token: str = Depends(oauth2_scheme)):
     return {"message": "Это защищенные данные."}
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f"Сообщение от вас: {data}")
+    except WebSocketDisconnect:
+        print("Клиент отключился")
