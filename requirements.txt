@@ -15,4 +15,5 @@ aiopg
 jinja2
 python-multipart==0.0.12
 uvicorn[standard]
+fastapi[all]
 

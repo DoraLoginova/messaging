@@ -6,7 +6,22 @@
 </head>
 <body>
     <h1>Приложение для обмена сообщениями</h1>
-    
+
+    <h2>Регистрация</h2>
+    <form id="register-form">
+        <input type="text" id="reg-username" placeholder="Имя пользователя" required>
+        <input type="password" id="reg-password" placeholder="Пароль" required>
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+
+    <h2>Вход</h2>
+    <form id="login-form">
+        <input type="text" id="login-username" placeholder="Имя пользователя" required>
+        <input type="password" id="login-password" placeholder="Пароль" required>
+        <button type="submit">Войти</button>
+    </form>
+
+    <h2>Отправить сообщение</h2>
     <form id="send-message-form">
         <input type="text" id="recipient" placeholder="Кому" required>
         <input type="text" id="message" placeholder="Сообщение" required>
@@ -17,6 +32,8 @@
 
     <script>
         const messageList = document.getElementById('messages');
+        let token = "";  // Переменная для хранения токена
+
         const socket = new WebSocket("ws://localhost:8000/ws");
 
         socket.onmessage = function(event) {
@@ -25,22 +42,70 @@
             messageList.appendChild(message);
         };
 
-        const submitForm = async () => {
+        const submitRegisterForm = async () => {
+            const form = document.getElementById('register-form');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('reg-username').value;
+                const password = document.getElementById('reg-password').value;
+
+                const response = await fetch('http://0.0.0.0:8000/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                alert(data.detail);
+                document.getElementById('reg-username').value = '';
+                document.getElementById('reg-password').value = '';
+            }
+        };
+
+        const submitLoginForm = async () => {
+            const form = document.getElementById('login-form');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+
+                const response = await fetch('http://0.0.0.0:8000/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `username=${username}&password=${password}`
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    token = data.access_token;  // Сохраняем токен
+                    alert('Успешно вошли в систему!');
+                } else {
+                    alert('Ошибка входа, проверьте введенные данные.');
+                }
+                document.getElementById('login-username').value = '';
+                document.getElementById('login-password').value = '';
+            }
+        };
+
+        const submitMessageForm = async () => {
             const form = document.getElementById('send-message-form');
-          
             form.onsubmit = (e) => {
                 e.preventDefault();
                 const recipient = document.getElementById('recipient').value;
                 const message = document.getElementById('message').value;
 
                 socket.send(`Кому: ${recipient}, Сообщение: ${message}`);
-
+                
                 document.getElementById('recipient').value = '';
                 document.getElementById('message').value = '';
             }
         };
 
-        submitForm();
+        submitRegisterForm();
+        submitLoginForm();
+        submitMessageForm();
     </script>
 </body>
 </html>
