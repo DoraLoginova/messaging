@@ -1,5 +1,3 @@
-import os
-from dotenv import load_dotenv
 from fastapi import HTTPException, status
 from sqlalchemy.future import select
 from passlib.context import CryptContext
@@ -8,32 +6,38 @@ from datetime import datetime, timedelta
 
 from models import User
 
-load_dotenv()
+TOKEN_LIFE = 15
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = "SECRET_KEY"
 ALGORITHM = "HS256"
-TOKEN_LIFE = os.getenv("TOKEN_LIFE")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 async def register_user(username, password, db):
+    print(f"Попытка регистрации пользователя: {username}")
     exist_user = await db.execute(
         select(User).where(User.username == username)
     )
     if exist_user.scalars().first():
+        print(f"Пользователь {username} уже существует.")
         return False
     hash_password = pwd_context.hash(password)
-    await db.execute(User.__table__.insert().values(
-        username=username,
-        password=hash_password
-    ))
+    new_user = User(username=username, password=hash_password)
+    db.add(new_user)
+    try:
+        await db.commit()
+        await db.refresh(new_user)
+        print(f"Пользователь {username} успешно зарегистрирован с ID: {new_user.id}")
+    except Exception as e:
+        print(f"Ошибка при регистрации пользователя: {e}")
+        await db.rollback()  # Откатить изменения при ошибке
     return True
 
 
 async def login_user(db, username, password):
     res = await db.execute(select(User).where(User.username == username))
     user = res.scalars().first()
-    if not user or not pwd_context.verify(password, user['password']):
+    if not user or not pwd_context.verify(password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Неверное имя пользователя или пароль",

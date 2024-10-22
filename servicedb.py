@@ -1,35 +1,25 @@
-import os
 import asyncio
 import aiopg
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from dotenv import load_dotenv
-
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 from models import Base
+from typing import AsyncGenerator
 
-load_dotenv()
+DB_URL = "postgresql+asyncpg://postgres:postgres@db:5432/postgres"
 
-DB = os.getenv("DB_URL")
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-
-
-engine = create_engine(DB, pool_size=10, max_overflow=20)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(DB_URL, echo=True, future=True)
+SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def wait_for_db():
     for _ in range(5):
         try:
             async with aiopg.connect(
-                dbname=DB_NAME,
-                user=DB_USER,
-                password=DB_PASSWORD,
-                host=DB_HOST,
-                port=DB_PORT
+                dbname='postgres',
+                user='postgres',
+                password='postgres',
+                host='db',
+                port='5432'
             ):
                 print("БД готова")
                 return
@@ -39,12 +29,16 @@ async def wait_for_db():
     raise Exception("PostgreSQL не доступен.")
 
 
-async def connect_db() -> Session:
+async def connect_db() -> AsyncGenerator[AsyncSession, None]:
     await wait_for_db()
-    db = SessionLocal()
+    db = SessionLocal() 
     try:
-        yield db
+        yield db 
     finally:
-        db.close()
+        await db.close()
 
-Base.metadata.create_all(bind=engine)
+
+# Создание таблиц
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)

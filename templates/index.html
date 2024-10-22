@@ -8,7 +8,7 @@
     <h1>Приложение для обмена сообщениями</h1>
     
     <form id="send-message-form">
-        <input type="text" id="recipient" placeholder="ID отправителя" required>
+        <input type="text" id="recipient" placeholder="Кому" required>
         <input type="text" id="message" placeholder="Сообщение" required>
         <button type="submit">Отправить</button>
     </form>
@@ -16,14 +16,31 @@
     <div id="messages"></div>
 
     <script>
+        const messageList = document.getElementById('messages');
+        const socket = new WebSocket("ws://localhost:8000/ws");
+
+        socket.onmessage = function(event) {
+            const message = document.createElement('div');
+            message.textContent = event.data;
+            messageList.appendChild(message);
+        };
+
         const submitForm = async () => {
             const form = document.getElementById('send-message-form');
           
-            form.onsubmit = async (e) => {
-              e.preventDefault();
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                const recipient = document.getElementById('recipient').value;
+                const message = document.getElementById('message').value;
+
+                socket.send(`Кому: ${recipient}, Сообщение: ${message}`);
+
+                document.getElementById('recipient').value = '';
+                document.getElementById('message').value = '';
             }
         };
-        submitForm();  
+
+        submitForm();
     </script>
 </body>
 </html>
